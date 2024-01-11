@@ -11,7 +11,7 @@ The supported formats for the structure files are xyz and zmat, and both can be 
 
 ## Scaling the charges in a forcefield
 
-Charge scaling is a common practice in the simulation of ionic liquids, and serves as a way to mimick polarization effects in a computationally cheap way, without the need of Drude particles of induced dipoles. The ```scale_charges.py``` executable is a tool to generate a forcefield with scaled charges from an unscaled one. To generate the new forcefield, run the following code
+Charge scaling is a common practice in the simulation of ionic liquids, and serves as a way to mimick polarization effects in a computationally cheap way, without the need of Drude particles or induced dipoles. The ```scale_charges.py``` executable is a tool to generate a forcefield with scaled charges from an unscaled one. To generate the new forcefield, run the following code
 
     python scale_charges.py scale_factor forcefield.ff structure1.xyz ... structureN.zmat
 
