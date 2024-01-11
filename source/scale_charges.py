@@ -47,9 +47,9 @@ import sys
 
 if __name__ == '__main__':
 
-    scale = float(sys.argv[0])
-    ff_file = sys.argv[1]
-    structure_files = sys.argv[2:]
+    scale = float(sys.argv[1])
+    ff_file = sys.argv[2]
+    structure_files = sys.argv[3:]
 
     main(ff_file, structure_files, scale)
 
