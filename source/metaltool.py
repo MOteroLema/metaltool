@@ -439,30 +439,35 @@ class Forcefield():
 
             if len(self.atoms) != 0:
                 file.write("\nATOMS\n")
+                file.write("#     type   m/u     q/e    pot    *parameters    polarizability/A-3\n")
                 for atom in self.atoms:
                     file.write(atom.generate_line())
                     file.write("\n")
 
             if len(self.bonds) != 0:
                 file.write("\nBONDS\n")
+                file.write("\n# i   j    pot    re/A    kr/kJmol-1\n")
                 for bond in self.bonds:
                     file.write(bond.generate_line())
                     file.write("\n")
 
             if len(self.angles) != 0:
                 file.write("\nANGLES\n")
+                file.write("# i   j   k    pot    th/deg  ka/kjmol-1\n")
                 for angle in self.angles:
                     file.write(angle.generate_line())
                     file.write("\n")
 
             if len(self.dihedrals) != 0:
                 file.write("\nDIHEDRALS\n")
+                file.write("# i   j   k   l    pot     v1        v2        v3        v4\n")
                 for dihedral in self.dihedrals:
                     file.write(dihedral.generate_line())
                     file.write("\n")
 
             if len(self.improper) != 0:
                 file.write("\nIMPROPER\n")
+                file.write("# i   j   k   l    pot     v1        v2        v3        v4\n")
                 for improper in self.improper:
                     file.write(improper.generate_line())
                     file.write("\n")
