@@ -5,8 +5,23 @@ import os
 
 class Atom():
 
-    def __init__(self, name, type, mass, charge,
-                 potential_type, potential_params, polarizability="0.0"):
+    def __init__(self, name:str, type:str, mass:str, charge:str,
+                 potential_type:str, potential_params:list, polarizability:str="0.0"):
+        """Class to store atomic information
+
+        Args:
+            name (str): Name of the atom
+            type (str): Type of the atom (this is what later defines which bond/angle/dihedral parameters are applied to it)
+            mass (str): Mass of the atom (u)
+            charge (str): Charge of the atom (e)
+            potential_type (str): Either "lj" (Lennard-Jones) of "ft" (Fumi-Tosi)
+            potential_params (list): List with the potential's parameters. For "lj" atoms, the list contains [sigma (A), epsilon (kJ/mol)], for 
+                                     for "ft", the list contains [B (A^-1), A (kj/mol), C6 (kJ/(mol*A^-6)), C8 (kJ/mol*A^-8)]
+            polarizability (str, optional): Polarizability of the atom (A^-3). Defaults to "0.0". If polarizabilities should not be written, input ""
+
+        Raises:
+            ValueError: If a non suported potential_type is provided
+        """
 
         self.name = name
         self.atomtype = type
@@ -29,7 +44,19 @@ class Atom():
             raise ValueError(f"Atom {name} of type {type} has been assigned a {potential_type} potential, which is not supported. Supported types are Lennard-Jones (lj) and Fumi-Tosi (ft)")
     
     @classmethod
-    def parse_line(cls, line):
+    def parse_line(cls, line:str):
+        """Defines an object from a string of characteristics
+
+        Args:
+            line (str): Line describing an atom, following the format of CL&P, with the option to have an extra parameter
+                        parameter at the end of the line which will be the polarizability
+
+        Raises:
+            ValueError: If a potential type not supported by the Atom class is read from the line
+
+        Returns:
+            Atom: Object of the Atom class
+        """
 
         items = line.strip().split()
 
@@ -72,7 +99,15 @@ class Atom():
         else:
             raise ValueError(f"This atom has been assigned a {items[4]} potential, which is not supported. Supported types are Lennard-Jones (lj) and Fumi-Tosi (ft)")
 
-    def generate_line(self):
+    def generate_line(self)->str:
+        """Function to create lines for the forcefield
+
+        Raises:
+            ValueError: If the current potential type is not supported
+
+        Returns:
+            str: Line describing the atom, in the CL&P format
+        """
 
         if self.pottype == "lj":
 
@@ -92,15 +127,31 @@ class Atom():
 
 class Bond():
 
-    def __init__(self, type1, type2, bondtype, r_eq, k):
+    def __init__(self, type1:str, type2:str, bondtype:str, r_eq:str, k:str):
+        """Class to store bond information
 
+        Args:
+            type1 (str): Atomtype of the first atom in the bond
+            type2 (str): Atomtype of the second atom in the bond_
+            bondtype (str): Type of the bond. Suported types are "harm" (harmonic) and "cons" (constraints)
+            r_eq (str): Equilibrium position (A)
+            k (str): Spring constant (kJ/mol)
+        """
         self.atomtypes = [type1, type2]
         self.bondtype = bondtype
         self.r_eq = r_eq
         self.k = k
 
     @classmethod
-    def parse_line(cls, line):
+    def parse_line(cls, line:str):
+        """Function to create an object from a forcefield line
+
+        Args:
+            line (str):  Line describing a bond, following the format of CL&P
+
+        Returns:
+            Bond: An object of the Bond class
+        """
 
         items = line.strip().split()
         assert len(items)==5, f"Found {len(items)} items in the line. Bonds are characterized by only 5 parameters"
@@ -109,7 +160,12 @@ class Bond():
         return cls(type1, type2, bondtype, r_eq, k)
 
    
-    def generate_line(self):
+    def generate_line(self)->str:
+        """Creates a line for the forcefield
+
+        Returns:
+            str: Forcefield line describing the bond, in the CL&P format
+        """
 
         contents = [self.atomtypes[0], self.atomtypes[1], self.bondtype, self.r_eq, self.k]
         assert (contents[2]=="harm" or contents[2]=="cons"), f"Unsupported type {contents[2]} was indicated for a bond. Supported types are harmonic (harm) and constraints (cons)"
@@ -118,7 +174,17 @@ class Bond():
     
 class Angle():
 
-    def __init__(self, type1, type2, type3, angletype, th_eq, k):
+    def __init__(self, type1:str, type2:str, type3:str, angletype:str, th_eq:str, k:str):
+        """Class to store information about angles
+
+        Args:
+            type1 (str): Atomtype of the first atom in the angle
+            type2 (str): Atomtype of the second atom in the angle
+            type3 (str): Atomtype of the third atom in the angle
+            angletype (str): Type of the angle. Supported types are "harm" (harmonic) and "cons" (constraints)
+            th_eq (str): Equilibrium angle (deg)
+            k (str): Spring constant (kJ/mol)
+        """
         
         self.atomtypes = [type1, type2, type3]
         self.angletype = angletype
@@ -126,7 +192,15 @@ class Angle():
         self.k = k
 
     @classmethod
-    def parse_line(cls, line):
+    def parse_line(cls, line:str):
+        """Generates an angle from a forcefield line
+
+        Args:
+            line (str): CL&P line describing the angle
+
+        Returns:
+            Angle: Object of the Angle class
+        """
 
         items = line.strip().split()
         assert len(items)==6, f"Found {len(items)} items  in the line. Angles are characterized by only 6 parameters"
@@ -135,7 +209,12 @@ class Angle():
         return cls(type1, type2, type3, bondtype, th_eq, k)
     
    
-    def generate_line(self):
+    def generate_line(self)->str:
+        """Generates a forcefield line from the stored information
+
+        Returns:
+            str: Forcefield line in the CL&P format
+        """
 
         contents = [self.atomtypes[0], self.atomtypes[1], self.atomtypes[2], self.angletype, self.th_eq, self.k]
         assert (contents[3]=="harm" or contents[3]=="cons"), f"Unsupported type {contents[3]} was indicated for a bond. Supported types are harmonic (harm) and constraints (cons)"
@@ -145,14 +224,33 @@ class Angle():
 
 class Dihedral():
 
-    def __init__(self, type1, type2, type3, type4, dihedraltype, v_params):
+    def __init__(self, type1:str, type2:str, type3:str, type4:str, dihedraltype:str, v_params:list):
+        """Class to store information about dihedrals
+
+        Args:
+            type1 (str): Atomtype of the first atom in the dihedral
+            type2 (str): Atomtype of the second atom in the dihedral
+            type3 (str): Atomtype of the third atom in the dihedral
+            type4 (str): Atomtype of the fourth atom in the dihedral
+            dihedraltype (str): Type of the dihedral. Supported types are "opls"
+            v_params (list): Parameters for the dihedral. For "opls", the list contains [V1, V2, V3, V4]
+        """
+
     
         self.atomtypes = [type1, type2, type3, type4]
         self.dihedraltype = dihedraltype
         self.params = v_params
 
     @classmethod
-    def parse_line(cls, line):
+    def parse_line(cls, line:str):
+        """Generates a dihedral from a forcefield line
+
+        Args:
+            line (str): CL&P line describing the dihedral
+
+        Returns:
+            Dihedral: Object of the Dihedral class
+        """
 
         items = line.strip().split()
         assert len(items)==9, f"Found {len(items)} items  in the line. Dihedrals are characterized by only 9 parameters"
@@ -161,7 +259,12 @@ class Dihedral():
         return cls(type1, type2, type3, type4, bondtype, [v1, v2, v3, v4])
     
    
-    def generate_line(self):
+    def generate_line(self)->str:
+        """Generates a forcefield line from the stored information
+
+        Returns:
+            str: Forcefield line in the CL&P format
+        """
 
         contents = [self.atomtypes[0], self.atomtypes[1], self.atomtypes[2], self.atomtypes[3], self.dihedraltype, self.params[0], self.params[1], self.params[2], self.params[3]]
         assert contents[4]=="opls", f"Unsupported type {contents[4]} was indicated for a dihedral. Supported types are OPLS (opls)"
@@ -171,14 +274,31 @@ class Dihedral():
 
 class ImproperDihedral():
 
-    def __init__(self, type1, type2, type3, type4, dihedraltype, v_params):
-    
+    def __init__(self, type1:str, type2:str, type3:str, type4:str, dihedraltype:str, v_params:str):
+        """Class to store information about improper dihedrals
+
+        Args:
+            type1 (str): Atomtype of the first atom in the dihedral
+            type2 (str): Atomtype of the second atom in the dihedral
+            type3 (str): Atomtype of the third atom in the dihedral
+            type4 (str): Atomtype of the fourth atom in the dihedral
+            dihedraltype (str): Type of the improper dihedral. Supported types are "opls"
+            v_params (list): Parameters for the improper dihedral. For "opls", the list contains [V1, V2, V3, V4]
+        """
         self.atomtypes = [type1, type2, type3, type4]
         self.dihedraltype = dihedraltype
         self.params = v_params
 
     @classmethod
-    def parse_line(cls, line):
+    def parse_line(cls, line:str):
+        """Generates an improper dihedral from a forcefield line
+
+        Args:
+            line (str): CL&P line describing the improper dihedral
+
+        Returns:
+            Dihedral: Object of the Dihedral class
+        """
 
         items = line.strip().split()
         assert len(items)==9, f"Found {len(items)} items  in the line. Improper dihedrals are characterized by only 9 parameters"
@@ -187,7 +307,12 @@ class ImproperDihedral():
         return cls(type1, type2, type3, type4, bondtype, [v1, v2, v3, v4])
     
    
-    def generate_line(self):
+    def generate_line(self)->str:
+        """Generates a forcefield line from the stored information
+
+        Returns:
+            str: Forcefield line in the CL&P format
+        """
 
         contents = [self.atomtypes[0], self.atomtypes[1], self.atomtypes[2], self.atomtypes[3], self.dihedraltype, self.params[0], self.params[1], self.params[2], self.params[3]]
         assert contents[4]=="opls", f"Unsupported type {contents[4]} was indicated for an improper dihedral. Supported types are OPLS (opls)"
@@ -198,8 +323,17 @@ class ImproperDihedral():
 
 class Forcefield():
 
-    def __init__(self, atoms_list=[], bonds_list=[], angles_list=[],
-                 dihedrals_list=[], improper_list=[]):
+    def __init__(self, atoms_list:list=[], bonds_list:list=[], angles_list:list=[],
+                 dihedrals_list:list=[], improper_list:list=[]):
+        """Class to store a CL&P formatted forcefield
+
+        Args:
+            atoms_list (list, optional): List of Atom objects. Defaults to [].
+            bonds_list (list, optional): List of Bond objects. Defaults to [].
+            angles_list (list, optional): List of Angle objects. Defaults to [].
+            dihedrals_list (list, optional): List of Dihedral objects. Defaults to [].
+            improper_list (list, optional): List of ImproperDihedral objects. Defaults to [].
+        """
 
         self.atoms = atoms_list
         self.bonds = bonds_list
@@ -209,7 +343,15 @@ class Forcefield():
 
 
     @classmethod
-    def from_file(cls, forcefield_file):
+    def from_file(cls, forcefield_file:str):
+        """Generates a forcefield from a file
+
+        Args:
+            forcefield_file (str): Path to a file containing a CL&P forcefield
+
+        Returns:
+            Forcefield: Object of the Forcefield class
+        """
 
         with open(forcefield_file, "r") as file:
 
@@ -232,7 +374,17 @@ class Forcefield():
         return cls(SECTIONS["ATOMS"], SECTIONS["BONDS"], SECTIONS["ANGLES"], SECTIONS["DIHEDRALS"], SECTIONS["IMPROPER"])
 
                 
-    def get_sub_forcefield(self, atom_names):
+    def get_sub_forcefield(self, atom_names:list):
+        """Generates a subset of the forcefield that only contains information about
+           atoms of interest
+
+        Args:
+            atom_names (list): List with the names of the atoms which will appear in the sub-forcefield
+
+        Returns:
+            Forcefield: A new object of the Forcefield class, which contains information only about the 
+                        given atom_names (and the bonds, angles,... etc. that involve only the selected atoms).
+        """
         
         atoms_list = []
         bonds_list = []
@@ -244,6 +396,11 @@ class Forcefield():
         for atom in self.atoms:
             if atom.name in atom_names:
                 atoms_list.append(atom)
+
+        ## Check if we missed any atoms
+        _selected_names = [a.name for a in atoms_list]
+        for atomname in atom_names:
+            assert atomname in _selected_names, f"Atom with name {atomname} is not in the forcefield"
 
         ## Now we get the corresponding atomtypes
         atomtypes = set([a.atomtype for a in atoms_list])
@@ -269,44 +426,59 @@ class Forcefield():
 
         return Forcefield(atoms_list, bonds_list, angles_list, dihedrals_list, improper_list)
         
-    def write_file(self, filename, comment="## Written with metaltool"):
+    def write_file(self, filename:str, comment:str="## Written with metaltool"):
+        """Writes the current forcefield information
 
+        Args:
+            filename (str): Name (or path) of the new forcefield file
+            comment (str, optional): Comment line in the forcefield. Defaults to "## Written with metaltool".
+        """
         with open(filename, "w") as file:
 
             file.write(comment)
-            file.write("\n")
 
             if len(self.atoms) != 0:
-                file.write("ATOMS\n")
+                file.write("\nATOMS\n")
                 for atom in self.atoms:
                     file.write(atom.generate_line())
                     file.write("\n")
 
             if len(self.bonds) != 0:
-                file.write("BONDS\n")
+                file.write("\nBONDS\n")
                 for bond in self.bonds:
                     file.write(bond.generate_line())
                     file.write("\n")
 
             if len(self.angles) != 0:
-                file.write("ANGLES\n")
+                file.write("\nANGLES\n")
                 for angle in self.angles:
                     file.write(angle.generate_line())
                     file.write("\n")
 
             if len(self.dihedrals) != 0:
-                file.write("DIHEDRALS\n")
+                file.write("\nDIHEDRALS\n")
                 for dihedral in self.dihedrals:
                     file.write(dihedral.generate_line())
                     file.write("\n")
 
             if len(self.improper) != 0:
-                file.write("IMPROPER\n")
+                file.write("\nIMPROPER\n")
                 for improper in self.improper:
                     file.write(improper.generate_line())
                     file.write("\n")
 
-def get_atomnames(file):
+def get_atomnames(file:str)->list:
+    """Given a structure file, retrieves the names of the atoms present in that file
+
+    Args:
+        file (str): Path to the structure file
+
+    Raises:
+        ValueError: If a not supported structure format is provided. Supported formats are zmat and xyz
+
+    Returns:
+        list: List containing the names of the atoms in the provided file
+    """
 
     extension = os.path.splitext(file)[-1]
     atomnames = []
@@ -440,7 +612,7 @@ def main(forcefield: Forcefield, files: list):
                 ## Change the name of the atom in the forcefield
                 print([a for a in sub_ff.atoms if a.name==old_name][0].name)
                 [a for a in sub_ff.atoms if a.name==old_name][0].name = new_name
-                ## Increase the atom id for the newt line, as well as the line index
+                ## Increase the atom id for the newt line
                 atom_id += 1
 
             ## Save the new file
